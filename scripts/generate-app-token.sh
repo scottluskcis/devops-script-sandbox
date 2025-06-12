@@ -35,6 +35,10 @@ else
     echo "To regenerate, run this script again."
 
     echo -e "\n-------------------------------------------------"
-    echo $APP_TOKEN
+    echo "TOKEN: $APP_TOKEN"
+    echo -e "\n"
+    echo "Generated at: $(date '+%Y-%m-%d %H:%M:%S %Z')"
+    echo "Expires at:   $(date -v+1H '+%Y-%m-%d %H:%M:%S %Z')"
     echo -e "-------------------------------------------------\n"
+    
 fi
