@@ -13,13 +13,13 @@ source "$SCRIPT_DIR/validate-env.sh"
 load_env "$SCRIPT_DIR"
 
 # Validate required environment variables
-validate_required_vars "CLIENT_ID" "PEM_FILE" "INSTALLATION_ID" "TOKEN_API"
+validate_required_vars "CLIENT_ID" "PEM_FILE" "INSTALLATION_ID" "TOKEN_API_DOMAIN"
 
 # call the generate-jwt.sh and pass in CLIENT_ID as first arg and PEM_FILE as second arg
 GITHUB_JWT=$("$SCRIPT_DIR/generate-jwt.sh" "$CLIENT_ID" "$PEM_FILE")
 
 # get the url for the app token
-APP_TOKEN_URL="https://${TOKEN_API}/app/installations/${INSTALLATION_ID}/access_tokens"
+APP_TOKEN_URL="https://${TOKEN_API_DOMAIN}/app/installations/${INSTALLATION_ID}/access_tokens"
 
 export APP_TOKEN=$( curl -s -X POST -H "Authorization: Bearer ${GITHUB_JWT}" -H "Accept: application/vnd.github.v3+json" ${APP_TOKEN_URL} | jq -r .token )
 
