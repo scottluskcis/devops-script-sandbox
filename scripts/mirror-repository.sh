@@ -18,6 +18,10 @@ validate_required_vars "SOURCE_REPO_URL" "TARGET_ORG" "REPO_NAME" "TARGET_DOMAIN
 # Configuration - set this to true to create PR, false to push directly
 CREATE_PR=${CREATE_PR:-false}  # Default to false, can be overridden by environment variable
 
+# Branch configuration - specify which branch to mirror
+BRANCH_NAME=${BRANCH_NAME:-main}  # Default to main, can be overridden by environment variable
+echo "Branch to mirror: $BRANCH_NAME"
+
 set -e
 
 # Generate the target token using our existing script
@@ -52,13 +56,13 @@ if [ "$CREATE_PR" = true ]; then
     # Create a sync branch
     SYNC_BRANCH="sync-$(date +%Y%m%d%H%M%S)" 
 
-    # Only push main to mirror-sync branch on target
-    echo "Creating sync branch: $SYNC_BRANCH"
-    git push target refs/heads/main:refs/heads/$SYNC_BRANCH --force
+    # Only push specified branch to mirror-sync branch on target
+    echo "Creating sync branch: $SYNC_BRANCH (from $BRANCH_NAME)"
+    git push target refs/heads/$BRANCH_NAME:refs/heads/$SYNC_BRANCH --force
     git push target --tags --force
 
-    # Create a PR from mirror-sync to main
-    echo "Creating pull request from $SYNC_BRANCH to main on $TARGET_ORG/$REPO_NAME"
+    # Create a PR from mirror-sync to specified branch
+    echo "Creating pull request from $SYNC_BRANCH to $BRANCH_NAME on $TARGET_ORG/$REPO_NAME"
     curl -X POST "https://$TARGET_DOMAIN/api/v3/repos/$TARGET_ORG/$REPO_NAME/pulls" \
     -H "Authorization: Bearer $TARGET_TOKEN" \
     -H "Accept: application/vnd.github+json" \
@@ -66,13 +70,13 @@ if [ "$CREATE_PR" = true ]; then
     -d '{
         "title": "Mirror Sync: '"$(date +%Y-%m-%d)"'",
         "head": "'"$SYNC_BRANCH"'",
-        "base": "main",
-        "body": "Automated synchronization of main branch."
+        "base": "'"$BRANCH_NAME"'",
+        "body": "Automated synchronization of '"$BRANCH_NAME"' branch."
     }'
 else
-    # Push directly to main branch (GitHub App should be on bypass list)
-    echo "Pushing directly to main branch on $TARGET_ORG/$REPO_NAME"
-    git push target refs/heads/main:refs/heads/main --force
+    # Push directly to specified branch (GitHub App should be on bypass list)
+    echo "Pushing directly to $BRANCH_NAME branch on $TARGET_ORG/$REPO_NAME"
+    git push target refs/heads/$BRANCH_NAME:refs/heads/$BRANCH_NAME --force
     
     # Push tags
     echo "Pushing tags"
